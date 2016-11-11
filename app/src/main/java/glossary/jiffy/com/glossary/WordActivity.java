@@ -8,8 +8,10 @@ import android.os.Environment;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.GestureDetector;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -33,10 +35,10 @@ public class WordActivity extends AppCompatActivity implements View.OnClickListe
     FloatingActionButton mMinusBtn;
     FloatingActionButton mSearchBtn;
 
-//    int mFilterMode = Word.MEMORY_COUNT_ALL;
+    //    int mFilterMode = Word.MEMORY_COUNT_ALL;
     int mFilterMode = Word.MEMORY_COUNT_OUT;
-//    int mFilterMode = Word.MEMORY_COUNT_IN;
-
+    //    int mFilterMode = Word.MEMORY_COUNT_IN;
+    GestureDetector mGestureDetector;
 
 
     @Override
@@ -63,19 +65,19 @@ public class WordActivity extends AppCompatActivity implements View.OnClickListe
 //        parseWordList();
         DBHelper.initSingleton(getApplicationContext());
         checkSyncWordList();
-
+        mGestureDetector = new GestureDetector(this, new GestureListener());
     }
 
     public void checkSyncWordList() {
         File wordTxtFile = new File(WORDLIST_FILE_PATH);
         if (!wordTxtFile.exists()) {
-            Toast.makeText(WordActivity.this, "wordlist.txt文件不存在", Toast.LENGTH_SHORT).show();
+            Toast.makeText(WordActivity.this, "wordlist.txt does not exist!", Toast.LENGTH_SHORT).show();
         } else {
             long lastModifyTime = wordTxtFile.lastModified();
             if (Pref.getPrevSyncTime(getApplicationContext()) != lastModifyTime) {
                 syncWordLostFromFile();
-            }else{
-                DBHelper.WordInfo.listWords(mWordList,mFilterMode);
+            } else {
+                DBHelper.WordInfo.listWords(mWordList, mFilterMode);
                 changeWord(false);
             }
         }
@@ -109,7 +111,7 @@ public class WordActivity extends AppCompatActivity implements View.OnClickListe
                 DBHelper.WordInfo.updateInMemoryCount(mWordList.get(mCurPos));
                 break;
             case R.id.fab_search:
-                startActivity(new Intent(WordActivity.this,WebViewActivity.class).putExtra("word",mWordList.get(mCurPos).english));
+                startActivity(new Intent(WordActivity.this, WebViewActivity.class).putExtra("word", mWordList.get(mCurPos).english));
                 break;
         }
 
@@ -193,7 +195,7 @@ public class WordActivity extends AppCompatActivity implements View.OnClickListe
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        switch(id){
+        switch (id) {
             case R.id.action_all:
                 mFilterMode = Word.MEMORY_COUNT_ALL;
                 break;
@@ -204,7 +206,7 @@ public class WordActivity extends AppCompatActivity implements View.OnClickListe
                 mFilterMode = Word.MEMORY_COUNT_OUT;
                 break;
         }
-        DBHelper.WordInfo.listWords(mWordList,mFilterMode);
+        DBHelper.WordInfo.listWords(mWordList, mFilterMode);
         mCurPos = -1;
         changeWord(false);
         return super.onOptionsItemSelected(item);
@@ -254,9 +256,55 @@ public class WordActivity extends AppCompatActivity implements View.OnClickListe
         @Override
         protected void onPostExecute(String result) {
             progressDialog.dismiss();
-            DBHelper.WordInfo.listWords(mWordList,mFilterMode);
+            DBHelper.WordInfo.listWords(mWordList, mFilterMode);
             Pref.savePrevSyncTime(getApplicationContext(), new File(WORDLIST_FILE_PATH).lastModified());
             changeWord(false);
+        }
+
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        return mGestureDetector.onTouchEvent(event);
+    }
+
+    private class GestureListener implements GestureDetector.OnGestureListener {
+
+        public boolean onDown(MotionEvent e) {
+            // TODO Auto-generated method stub
+            return false;
+        }
+
+        public void onShowPress(MotionEvent e) {
+            // TODO Auto-generated method stub
+
+        }
+
+        public boolean onSingleTapUp(MotionEvent e) {
+            // TODO Auto-generated method stub
+            return false;
+        }
+
+        public boolean onScroll(MotionEvent e1, MotionEvent e2,
+                                float distanceX, float distanceY) {
+            // TODO Auto-generated method stub
+            return false;
+        }
+
+        public void onLongPress(MotionEvent e) {
+            // TODO Auto-generated method stub
+
+        }
+
+        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
+                               float velocityY) {
+            // TODO Auto-generated method stub
+            if (e1.getX() - e2.getX() > 120) {//向左滑
+                changeWord(false);
+            } else if (e1.getX() - e2.getX() < -120) {//向右滑
+                changeWord(true);
+            }
+            return false;
         }
 
     }
