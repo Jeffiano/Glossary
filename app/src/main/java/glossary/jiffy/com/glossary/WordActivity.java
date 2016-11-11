@@ -22,6 +22,7 @@ import java.util.List;
 
 public class WordActivity extends AppCompatActivity implements View.OnClickListener {
     private TextView mEnglishWord;
+    private TextView mEnglishWordAnimFake;
     private TextView mChineseWord;
     public static final String WORDLIST_FILE_PATH = Environment.getExternalStorageDirectory().getPath() + "/Yuan/wordlist.txt";
     public ArrayList<Word> mWordList = new ArrayList<Word>();
@@ -47,6 +48,7 @@ public class WordActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_word);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         mEnglishWord = (TextView) findViewById(R.id.word_english);
+        mEnglishWordAnimFake = (TextView) findViewById(R.id.word_english_anim_fake);
         mChineseWord = (TextView) findViewById(R.id.word_chinese);
         setSupportActionBar(toolbar);
 
@@ -158,6 +160,7 @@ public class WordActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public void changeWord(boolean prevORnext) {
+        String currentStr = mEnglishWordAnimFake.getText().toString();
         Word word = null;
         if (prevORnext) {
             word = prevWord();
@@ -168,6 +171,7 @@ public class WordActivity extends AppCompatActivity implements View.OnClickListe
             return;
         else {
             mEnglishWord.setText(word.english);
+            mEnglishWordAnimFake.setText(word.english);
             mChineseWord.setText(word.chinese);
         }
         if (word.isInMemory()) {
@@ -178,6 +182,8 @@ public class WordActivity extends AppCompatActivity implements View.OnClickListe
             mMinusBtn.setVisibility(View.VISIBLE);
         }
         mChineseWord.setVisibility(View.GONE);
+
+        startWordChangeAnim(currentStr,word.english,prevORnext);
     }
 
     @Override
@@ -306,6 +312,32 @@ public class WordActivity extends AppCompatActivity implements View.OnClickListe
             }
             return false;
         }
+
+    }
+    private void startWordChangeAnim(String beforeStr, String afterStr, boolean prevOrNext){
+        int duration = 500;
+        int distance = 1000;
+        int oriViewStart;
+        int oriViewEnd;
+        int fakeViewStart;
+        int fakeViewEnd;
+        if(prevOrNext){
+            oriViewStart = 0;
+            oriViewEnd = distance;
+            fakeViewStart = -distance;
+            fakeViewEnd = 0;
+        }else{
+            oriViewStart = 0;
+            oriViewEnd = -distance;
+            fakeViewStart = distance;
+            fakeViewEnd = 0;
+        }
+        mEnglishWord.setTranslationX(oriViewStart);
+        mEnglishWord.setText(beforeStr);
+        mEnglishWordAnimFake.setTranslationX(fakeViewStart);
+        mEnglishWordAnimFake.setText(afterStr);
+        mEnglishWord.animate().translationX(oriViewEnd).setDuration(duration).start();
+        mEnglishWordAnimFake.animate().translationX(fakeViewEnd).setDuration(duration).start();
 
     }
 }

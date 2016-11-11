@@ -29,10 +29,26 @@
         />
 
     <TextView
+        android:id="@+id/word_english_anim_fake"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_margin="10dp"
+        android:background="@color/accent_material_dark"
+        android:gravity="center"
+        android:text="Reay Go!"
+        android:textColor="@android:color/white"
+        android:textSize="45dp"
+        android:textStyle="bold"
+        android:typeface="normal"
+
+        />
+
+    <TextView
         android:id="@+id/word_chinese"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/word_english"
+        android:layout_below="@+id/word_english_anim_fake"
         android:layout_centerHorizontal="true"
         android:layout_margin="10dp"
         android:background="@color/colorAccent"
