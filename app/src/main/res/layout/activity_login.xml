@@ -1,18 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0099cc" >
+    android:fitsSystemWindows="true"
+    tools:context="glossary.jiffy.com.glossary.BaiduLoginActivity">
 
     <WebView
         android:id="@+id/webview"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
-    <Button
-        android:id="@+id/download"
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fab_download"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_margin="@dimen/fab_margin"
         android:onClick="onDownloadClick"
-        android:text="DOWN" />
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="20dp"
+        android:layout_marginRight="20dp"
+        android:layout_alignParentRight="true"
+        android:src="@android:drawable/stat_sys_download"
+        app:backgroundTint="@android:color/holo_blue_bright" />
 
 </RelativeLayout>
