@@ -8,11 +8,13 @@ import android.os.Environment;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.view.GestureDetector;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -24,9 +26,12 @@ public class WordActivity extends AppCompatActivity implements View.OnClickListe
     private TextView mEnglishWord;
     private TextView mEnglishWordAnimFake;
     private TextView mChineseWord;
+    private ProgressBar mProgressBar;
+    private TextView mProgressInfo;
     public static final String WORDLIST_FILE_PATH = Environment.getExternalStorageDirectory().getPath() + "/Yuan/wordlist.txt";
     public ArrayList<Word> mWordList = new ArrayList<Word>();
     public int mCurPos = -1;
+    private int mWordAddCount;
 
 
     FloatingActionButton mPrevBtn;
@@ -35,6 +40,7 @@ public class WordActivity extends AppCompatActivity implements View.OnClickListe
     FloatingActionButton mAddBtn;
     FloatingActionButton mMinusBtn;
     FloatingActionButton mSearchBtn;
+    FloatingActionButton mSyncBtn;
 
     //    int mFilterMode = Word.MEMORY_COUNT_ALL;
     int mFilterMode = Word.MEMORY_COUNT_OUT;
@@ -50,6 +56,8 @@ public class WordActivity extends AppCompatActivity implements View.OnClickListe
         mEnglishWord = (TextView) findViewById(R.id.word_english);
         mEnglishWordAnimFake = (TextView) findViewById(R.id.word_english_anim_fake);
         mChineseWord = (TextView) findViewById(R.id.word_chinese);
+        mProgressInfo = (TextView) findViewById(R.id.progress_info);
+        mProgressBar = (ProgressBar) findViewById(R.id.progress);
         setSupportActionBar(toolbar);
 
         mPrevBtn = (FloatingActionButton) findViewById(R.id.fab_prev);
@@ -64,6 +72,8 @@ public class WordActivity extends AppCompatActivity implements View.OnClickListe
         mMinusBtn.setOnClickListener(this);
         mSearchBtn = (FloatingActionButton) findViewById(R.id.fab_search);
         mSearchBtn.setOnClickListener(this);
+        mSyncBtn = (FloatingActionButton) findViewById(R.id.fab_sync);
+        mSyncBtn.setOnClickListener(this);
 //        parseWordList();
         DBHelper.initSingleton(getApplicationContext());
         checkSyncWordList();
@@ -101,19 +111,31 @@ public class WordActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 break;
             case R.id.fab_add:
+                mWordAddCount--;
                 mWordList.get(mCurPos).inMemoryCount = Word.MEMORY_COUNT_OUT;
                 mAddBtn.setVisibility(View.GONE);
                 mMinusBtn.setVisibility(View.VISIBLE);
                 DBHelper.WordInfo.updateInMemoryCount(mWordList.get(mCurPos));
+                refreshProgss();
                 break;
             case R.id.fab_minus:
+                mWordAddCount++;
                 mWordList.get(mCurPos).inMemoryCount = Word.MEMORY_COUNT_IN;
                 mAddBtn.setVisibility(View.VISIBLE);
                 mMinusBtn.setVisibility(View.GONE);
                 DBHelper.WordInfo.updateInMemoryCount(mWordList.get(mCurPos));
+                refreshProgss();
                 break;
             case R.id.fab_search:
-                startActivity(new Intent(WordActivity.this, WebViewActivity.class).putExtra("word", mWordList.get(mCurPos).english));
+                if (!mWordList.isEmpty() && mCurPos >= 0)
+                    startActivity(new Intent(WordActivity.this, WebViewActivity.class).putExtra("word", mWordList.get(mCurPos).english));
+                break;
+            case R.id.fab_sync:
+                if (TextUtils.isEmpty(Pref.getCookie(getApplicationContext()))) {
+                    startActivity(new Intent(WordActivity.this, BaiduLoginActivity.class));
+                } else {
+                    new DownTask(this).execute();
+                }
                 break;
         }
 
@@ -183,7 +205,7 @@ public class WordActivity extends AppCompatActivity implements View.OnClickListe
         }
         mChineseWord.setVisibility(View.GONE);
 
-        startWordChangeAnim(currentStr,word.english,prevORnext);
+        startWordChangeAnim(currentStr, word.english, prevORnext);
     }
 
     @Override
@@ -212,10 +234,23 @@ public class WordActivity extends AppCompatActivity implements View.OnClickListe
                 mFilterMode = Word.MEMORY_COUNT_OUT;
                 break;
         }
+        changeFilterMode();
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void changeFilterMode() {
         DBHelper.WordInfo.listWords(mWordList, mFilterMode);
         mCurPos = -1;
         changeWord(false);
-        return super.onOptionsItemSelected(item);
+        mWordAddCount = 0;
+        refreshProgss();
+        if (mFilterMode == Word.MEMORY_COUNT_OUT) {
+            mProgressBar.setVisibility(View.VISIBLE);
+            mProgressInfo.setVisibility(View.VISIBLE);
+        } else {
+            mProgressBar.setVisibility(View.INVISIBLE);
+            mProgressInfo.setVisibility(View.INVISIBLE);
+        }
     }
 
     public class SynFileWordListTask extends AsyncTask<String, Integer, String> {
@@ -232,18 +267,22 @@ public class WordActivity extends AppCompatActivity implements View.OnClickListe
             List<String> strList = Utils.getStringArrayFromSD(WORDLIST_FILE_PATH);
             int count = 0;
             int len = strList.size();
-            for (String s : strList) {
-                String[] info = s.split("\t");
-                String english = info[1].trim();
-                String chinese = info[3].trim();
-                if (!DBHelper.WordInfo.isWordExist(english)) {
-                    Word word = new Word();
-                    word.english = english;
-                    word.chinese = chinese;
-                    DBHelper.WordInfo.insert(word);
+            try {
+                for (String s : strList) {
+                    String[] info = s.split("\t");
+                    String english = info[1].trim();
+                    String chinese = info[3].trim();
+                    if (!DBHelper.WordInfo.isWordExist(english)) {
+                        Word word = new Word();
+                        word.english = english;
+                        word.chinese = chinese;
+                        DBHelper.WordInfo.insert(word);
+                    }
+                    count++;
+                    publishProgress((int) (count / (float) len * 100));
                 }
-                count++;
-                publishProgress((int) (count / (float) len * 100));
+            } catch (Exception ex) {
+                ex.printStackTrace();
             }
             return "";
         }
@@ -314,19 +353,20 @@ public class WordActivity extends AppCompatActivity implements View.OnClickListe
         }
 
     }
-    private void startWordChangeAnim(String beforeStr, String afterStr, boolean prevOrNext){
+
+    private void startWordChangeAnim(String beforeStr, String afterStr, boolean prevOrNext) {
         int duration = 500;
         int distance = 1000;
         int oriViewStart;
         int oriViewEnd;
         int fakeViewStart;
         int fakeViewEnd;
-        if(prevOrNext){
+        if (prevOrNext) {
             oriViewStart = 0;
             oriViewEnd = distance;
             fakeViewStart = -distance;
             fakeViewEnd = 0;
-        }else{
+        } else {
             oriViewStart = 0;
             oriViewEnd = -distance;
             fakeViewStart = distance;
@@ -339,5 +379,12 @@ public class WordActivity extends AppCompatActivity implements View.OnClickListe
         mEnglishWord.animate().translationX(oriViewEnd).setDuration(duration).start();
         mEnglishWordAnimFake.animate().translationX(fakeViewEnd).setDuration(duration).start();
 
+    }
+
+    private void refreshProgss() {
+        int total = mWordList.size();
+        int progress = (int) (((float) mWordAddCount / total) * 100);
+        mProgressBar.setProgress(progress);
+        mProgressInfo.setText(mWordAddCount + "/" + total);
     }
 }

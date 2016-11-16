@@ -40,6 +40,8 @@ public class WebViewActivity extends Activity {
         webSettings.setLoadWithOverviewMode(true);
         webSettings.setUseWideViewPort(true);
         webSettings.setBuiltInZoomControls(false);
+        webSettings.setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
+
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {

@@ -1,5 +1,8 @@
 package glossary.jiffy.com.glossary;
 
+import android.os.Environment;
+import android.util.Log;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -7,6 +10,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
@@ -86,6 +90,28 @@ public class Utils {
 		return list;
 
 	}
+	public static String getFirstLineStrinFromSD(String filePath) {
+		String result = "";
+		if (!new File(filePath).exists())
+			return result;
+		try {
+			BufferedReader bufferReader = new BufferedReader(new InputStreamReader(new FileInputStream(filePath),
+					"utf-8"));
+			result = bufferReader.readLine();
+			bufferReader.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return result;
+
+	}
 
 	public static boolean copy(String fileFrom, String fileTo) {
 		try {
@@ -113,5 +139,32 @@ public class Utils {
 		}
 		return temp;
 	}
+	public static void writeToSD(String path, InputStream input) {
 
+		if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+			try {
+				File file = new File(path);
+				File parent = file.getParentFile();
+				if (!parent.exists()) {
+					parent.mkdirs();
+				}
+				FileOutputStream fos = new FileOutputStream(file);
+				byte[] b = new byte[2048];
+				int j = 0;
+				while ((j = input.read(b)) != -1) {
+					fos.write(b, 0, j);
+				}
+				fos.flush();
+				fos.close();
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} else {
+			Log.i("Utils", "NO SDCard available.");
+		}
+	}
 }

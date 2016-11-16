@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     android:paddingBottom="@dimen/activity_vertical_margin"
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
@@ -12,43 +13,67 @@
     tools:context="glossary.jiffy.com.glossary.WordActivity"
     tools:showIn="@layout/activity_word">
 
-    <TextView
-        android:id="@+id/word_english"
+    <ProgressBar
+        android:id="@+id/progress"
+        style="@android:style/Widget.Holo.ProgressBar.Horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_margin="10dp"
-        android:background="@color/accent_material_dark"
+        android:indeterminate="false" />
+
+    <TextView
+        android:id="@+id/progress_info"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:gravity="center"
-        android:text="Hello"
-        android:textColor="@android:color/white"
-        android:textSize="45dp"
+        android:textColor="@android:color/holo_blue_dark"
+        android:textSize="15dp"
         android:textStyle="bold"
         android:typeface="normal"
 
         />
 
-    <TextView
-        android:id="@+id/word_english_anim_fake"
+    <RelativeLayout
+        android:id="@+id/word_english_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_margin="10dp"
-        android:background="@color/accent_material_dark"
-        android:gravity="center"
-        android:text="Reay Go!"
-        android:textColor="@android:color/white"
-        android:textSize="45dp"
-        android:textStyle="bold"
-        android:typeface="normal"
+        android:layout_marginBottom="10dp"
+        android:layout_marginLeft="0dp"
+        android:layout_marginRight="0dp"
+        android:layout_marginTop="10dp">
 
-        />
+        <TextView
+            android:id="@+id/word_english"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/accent_material_dark"
+            android:gravity="center"
+            android:text="Ready GO!"
+            android:textColor="@android:color/white"
+            android:textSize="45dp"
+            android:textStyle="bold"
+            android:typeface="normal"
+
+            />
+
+        <TextView
+            android:id="@+id/word_english_anim_fake"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/accent_material_dark"
+            android:gravity="center"
+            android:text="Ready GO!"
+            android:textColor="@android:color/white"
+            android:textSize="45dp"
+            android:textStyle="bold"
+            android:typeface="normal"
+
+            />
+    </RelativeLayout>
 
     <TextView
         android:id="@+id/word_chinese"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/word_english_anim_fake"
         android:layout_centerHorizontal="true"
         android:layout_margin="10dp"
         android:background="@color/colorAccent"
@@ -58,4 +83,4 @@
         android:textSize="20dp"
         android:textStyle="bold"
         android:typeface="normal" />
-</RelativeLayout>
+</LinearLayout>

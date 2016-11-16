@@ -91,6 +91,13 @@
                 android:layout_margin="@dimen/fab_margin"
                 android:src="@android:drawable/ic_menu_search"
                 app:backgroundTint="@android:color/holo_orange_light" />
+            <android.support.design.widget.FloatingActionButton
+                android:id="@+id/fab_sync"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/fab_margin"
+                android:src="@android:drawable/stat_notify_sync_noanim"
+                app:backgroundTint="@android:color/holo_blue_bright" />
         </LinearLayout>
     </LinearLayout>
 </android.support.design.widget.CoordinatorLayout>
