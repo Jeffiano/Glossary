@@ -355,7 +355,7 @@ public class WordActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void startWordChangeAnim(String beforeStr, String afterStr, boolean prevOrNext) {
-        int duration = 500;
+        int duration = 300;
         int distance = 1000;
         int oriViewStart;
         int oriViewEnd;
