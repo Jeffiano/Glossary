@@ -2,23 +2,31 @@ package glossary.jiffy.com.glossary;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,6 +39,7 @@ public class WordActivity extends AppCompatActivity implements View.OnClickListe
     public static final String WORDLIST_FILE_PATH = Environment.getExternalStorageDirectory().getPath() + "/Yuan/wordlist.txt";
     public ArrayList<Word> mWordList = new ArrayList<Word>();
     public int mCurPos = -1;
+    public int mCurPosCache = 0;
     private int mWordAddCount;
 
 
@@ -46,7 +55,28 @@ public class WordActivity extends AppCompatActivity implements View.OnClickListe
     int mFilterMode = Word.MEMORY_COUNT_OUT;
     //    int mFilterMode = Word.MEMORY_COUNT_IN;
     GestureDetector mGestureDetector;
+    WebView mWebViewForCache;
+    private static final int MSG_CAHCE_FOR_OFFLINE = 0;
+    private WordHandler mHandler = new WordHandler(this);
 
+
+    public static class WordHandler extends Handler {
+        private WeakReference<WordActivity> mWeakActivity;
+
+        public WordHandler(WordActivity activity) {
+            this.mWeakActivity = new WeakReference<WordActivity>(activity);
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case MSG_CAHCE_FOR_OFFLINE:
+                    String english = (String) msg.obj;
+                    mWeakActivity.get().cacheWord(english);
+                    break;
+            }
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,6 +88,7 @@ public class WordActivity extends AppCompatActivity implements View.OnClickListe
         mChineseWord = (TextView) findViewById(R.id.word_chinese);
         mProgressInfo = (TextView) findViewById(R.id.progress_info);
         mProgressBar = (ProgressBar) findViewById(R.id.progress);
+        mWebViewForCache = (WebView) findViewById(R.id.webview_for_cache);
         setSupportActionBar(toolbar);
 
         mPrevBtn = (FloatingActionButton) findViewById(R.id.fab_prev);
@@ -78,6 +109,13 @@ public class WordActivity extends AppCompatActivity implements View.OnClickListe
         DBHelper.initSingleton(getApplicationContext());
         checkSyncWordList();
         mGestureDetector = new GestureDetector(this, new GestureListener());
+        setCacheWebViewSetting();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        mHandler.removeCallbacks(null);
     }
 
     public void checkSyncWordList() {
@@ -91,6 +129,9 @@ public class WordActivity extends AppCompatActivity implements View.OnClickListe
             } else {
                 DBHelper.WordInfo.listWords(mWordList, mFilterMode);
                 changeWord(false);
+                if (Utils.isNetworkWifi(getApplicationContext())) {
+                    mHandler.obtainMessage(MSG_CAHCE_FOR_OFFLINE, mWordList.get(mCurPosCache).english).sendToTarget();
+                }
             }
         }
     }
@@ -304,6 +345,9 @@ public class WordActivity extends AppCompatActivity implements View.OnClickListe
             DBHelper.WordInfo.listWords(mWordList, mFilterMode);
             Pref.savePrevSyncTime(getApplicationContext(), new File(WORDLIST_FILE_PATH).lastModified());
             changeWord(false);
+            if (Utils.isNetworkWifi(getApplicationContext())) {
+                mHandler.obtainMessage(MSG_CAHCE_FOR_OFFLINE, mWordList.get(mCurPosCache).english).sendToTarget();
+            }
         }
 
     }
@@ -387,4 +431,45 @@ public class WordActivity extends AppCompatActivity implements View.OnClickListe
         mProgressBar.setProgress(progress);
         mProgressInfo.setText(mWordAddCount + "/" + total);
     }
+
+    private void setCacheWebViewSetting() {
+        WebSettings webSettings = mWebViewForCache.getSettings();
+        webSettings.setJavaScriptEnabled(true);
+        webSettings.setDomStorageEnabled(true);
+        webSettings.setDatabaseEnabled(true);
+        webSettings.setLoadWithOverviewMode(true);
+        webSettings.setUseWideViewPort(true);
+        webSettings.setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
+
+        mWebViewForCache.setWebViewClient(new WebViewClient() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                mWebViewForCache.loadUrl(url);
+                return true;
+            }
+
+            public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                Log.d("WebView", "onPageStarted");
+                super.onPageStarted(view, url, favicon);
+            }
+
+            public void onPageFinished(WebView view, String url) {
+                Log.e("WebView", "onPageFinished "+ url);
+                super.onPageFinished(view, url);
+                Word word = mWordList.get(mCurPosCache);
+                if(!TextUtils.isEmpty(url) && url.endsWith(word.english)){
+                    word.cacheState = Word.CACHE_YES;
+                    DBHelper.WordInfo.updateCacheState(word);
+                    mCurPosCache++;
+                    if(mCurPosCache < mWordList.size())
+                        mHandler.obtainMessage(MSG_CAHCE_FOR_OFFLINE, mWordList.get(mCurPosCache).english).sendToTarget();
+                }
+            }
+        });
+    }
+
+    public void cacheWord(String english) {
+        mWebViewForCache.loadUrl(WebViewActivity.BAIDU_DICT_URL + english);
+    }
+
 }

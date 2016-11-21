@@ -83,4 +83,9 @@
         android:textSize="20dp"
         android:textStyle="bold"
         android:typeface="normal" />
+
+    <WebView
+        android:id="@+id/webview_for_cache"
+        android:layout_width="100dp"
+        android:layout_height="100dp" />
 </LinearLayout>

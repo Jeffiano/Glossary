@@ -17,7 +17,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     public static String db = "jiffy_glossary.db";
     public static DBHelper instance;
-    private static final int VERSION = 1;
+    private static final int VERSION = 2;
 
     public static DBHelper initSingleton(Context context) {
         if (instance == null) {
@@ -38,6 +38,9 @@ public class DBHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        if (oldVersion < 2) {
+            db.execSQL("ALTER TABLE word ADD COLUMN cache_state integer");
+        }
     }
 
     private static void close(Cursor cursor) {
@@ -92,6 +95,10 @@ public class DBHelper extends SQLiteOpenHelper {
         public static void updateInMemoryCount(Word word) {
             SQLiteDatabase sdb = instance.getDb();
             sdb.execSQL("update word set in_memory_count = " + word.inMemoryCount  +" where _id=" + word._id);
+        }
+        public static void updateCacheState(Word word) {
+            SQLiteDatabase sdb = instance.getDb();
+            sdb.execSQL("update word set cache_state = " + word.cacheState  +" where _id=" + word._id);
         }
 
         public static int getWordCount() {

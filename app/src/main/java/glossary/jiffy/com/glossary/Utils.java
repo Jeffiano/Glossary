@@ -1,5 +1,8 @@
 package glossary.jiffy.com.glossary;
 
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Environment;
 import android.util.Log;
 
@@ -166,5 +169,37 @@ public class Utils {
 		} else {
 			Log.i("Utils", "NO SDCard available.");
 		}
+	}
+	public static boolean isNetworkAvaible(Context act) {
+		ConnectivityManager connectivityManager = (ConnectivityManager) act
+				.getSystemService(Context.CONNECTIVITY_SERVICE);
+		NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+		return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+	}
+
+	public static boolean isNetworkWifi(Context context) {
+		ConnectivityManager connectivityManager = (ConnectivityManager) context
+				.getSystemService(Context.CONNECTIVITY_SERVICE);
+		NetworkInfo activeNetInfo = connectivityManager.getActiveNetworkInfo();
+		if (activeNetInfo != null && activeNetInfo.getType() == ConnectivityManager.TYPE_WIFI) {
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * 判断当前网络是否是移动网络
+	 *
+	 * @param context
+	 * @return boolean
+	 */
+	public static boolean isNetworkMobile(Context context) {
+		ConnectivityManager connectivityManager = (ConnectivityManager) context
+				.getSystemService(Context.CONNECTIVITY_SERVICE);
+		NetworkInfo activeNetInfo = connectivityManager.getActiveNetworkInfo();
+		if (activeNetInfo != null && activeNetInfo.getType() == ConnectivityManager.TYPE_MOBILE) {
+			return true;
+		}
+		return false;
 	}
 }
