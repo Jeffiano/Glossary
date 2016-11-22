@@ -33,7 +33,7 @@ public class DBHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL("CREATE TABLE IF NOT EXISTS word(_id integer primary key, "
-                + "in_memory_count integer, pron_url varchar(32), pron_file_path varchar(32),  english varchar(32),chinese varchar(32))");
+                + "cache_state integer ,in_memory_count integer, pron_url varchar(32), pron_file_path varchar(32),  english varchar(32),chinese varchar(32))");
     }
 
     @Override
@@ -68,6 +68,7 @@ public class DBHelper extends SQLiteOpenHelper {
                 cvs.put("in_memory_count", word.inMemoryCount);
                 cvs.put("pron_file_path", word.pronFilePath);
                 cvs.put("pron_url", word.pronUrl);
+                cvs.put("cache_state", word.cacheState);
                 word._id = sdb.insert(table, null, cvs);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -141,6 +142,7 @@ public class DBHelper extends SQLiteOpenHelper {
                     word.inMemoryCount = cursor.getInt(cursor.getColumnIndexOrThrow("in_memory_count"));
                     word.pronFilePath = cursor.getString(cursor.getColumnIndexOrThrow("pron_file_path"));
                     word.pronUrl = cursor.getString(cursor.getColumnIndexOrThrow("pron_url"));
+                    word.cacheState = cursor.getInt(cursor.getColumnIndexOrThrow("cache_state"));
                     list.add(word);
                 }
                 Collections.shuffle(list);

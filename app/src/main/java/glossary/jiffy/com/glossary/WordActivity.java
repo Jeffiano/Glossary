@@ -460,9 +460,18 @@ public class WordActivity extends AppCompatActivity implements View.OnClickListe
                 if(!TextUtils.isEmpty(url) && url.endsWith(word.english)){
                     word.cacheState = Word.CACHE_YES;
                     DBHelper.WordInfo.updateCacheState(word);
-                    mCurPosCache++;
-                    if(mCurPosCache < mWordList.size())
-                        mHandler.obtainMessage(MSG_CAHCE_FOR_OFFLINE, mWordList.get(mCurPosCache).english).sendToTarget();
+                }
+//                mCurPosCache++;
+//                if(mCurPosCache < mWordList.size())
+//                    mHandler.obtainMessage(MSG_CAHCE_FOR_OFFLINE, mWordList.get(mCurPosCache).english).sendToTarget();
+
+                int startPos = mCurPos;
+                for(int i = startPos ; i < mWordList.size(); i++){
+                    if(!mWordList.get(i).isCached() && !mWordList.get(i).english.contains(" ") ){
+                        mHandler.obtainMessage(MSG_CAHCE_FOR_OFFLINE, mWordList.get(i).english).sendToTarget();
+                        mCurPosCache = i;
+                        break;
+                    }
                 }
             }
         });

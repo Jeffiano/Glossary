@@ -86,6 +86,7 @@
 
     <WebView
         android:id="@+id/webview_for_cache"
-        android:layout_width="100dp"
-        android:layout_height="100dp" />
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:visibility="invisible"/>
 </LinearLayout>
